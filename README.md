@@ -45,7 +45,7 @@ To get a local copy up and running, follow these simple steps.
 1. Clone the Repository & Install Dependencies
 
 # Clone the repository
-git clone [https://github.com/YourUsername/AI-Agent-Manager.git](https://github.com/YourUsername/AI-Agent-Manager.git)
+git clone git clone https://github.com/Uday4890/AI-Agent-Manager.git
 cd AI-Agent-Manager
 
 # Install Node.js dependencies
