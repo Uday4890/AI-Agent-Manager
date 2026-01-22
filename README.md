@@ -1,87 +1,194 @@
-🌟 Modular AI Agent Manager: WhatsApp Core Engine
+🌟 Qdrant-Powered WhatsApp AI Agent
+Persona-Aware Long-Term Memory for Conversational Systems (MAS Track)
 
-This project provides the foundational, production-ready architecture for a personalized and perpetually context-aware AI Digital Assistant. It is designed for resilience and scalability across multiple communication platforms using Node.js, OpenAI, and Google Firestore.
+This project implements a production-oriented conversational AI agent that combines deterministic persona control with semantic long-term memory using Qdrant as the primary vector search engine.
 
-Key Architectural Features
+The system is designed for real-world messaging platforms (WhatsApp) where conversations are fragmented, long-running, and require persistent context.
 
-Multi-Agent Design (Brain and Worker): Implements a highly decoupled "Brain and Worker" architecture. The central server.js (the Brain) handles all LLM calls, memory logic, and tone management, while isolated workers (like whatsapp.js) manage platform-specific credentials and message delivery. This isolation enhances security and ensures fault tolerance.
+🧠 Core Idea
 
-Infinite Conversation Memory: Solves the token limit problem via Conversation Summarization. Once a thread exceeds the defined limit (currently 15 messages), the Main Agent uses GPT-4o-mini to compress the history into a concise summary, which is archived in Firestore.
+Traditional chatbots rely on short prompt windows and forget past interactions.
+This system introduces a multi-layer memory architecture:
 
-Multimodal Ready: The system is configured to process and analyze both text captions and image URLs simultaneously in a single API call, leveraging the vision capabilities of modern LLMs.
+Firestore (Deterministic memory)
+Enforces strict persona, tone, and behavioral rules.
 
-🛠️ Project Structure & Setup
+Qdrant (Semantic memory)
+Stores and retrieves long-term contextual information using vector similarity search.
 
-Core Components
+This separation ensures consistency, scalability, and controllable behavior.
 
-File
+🧩 System Architecture (MAS Design)
+User (WhatsApp)
+      |
+Webhook (ngrok → Express)
+      |
+Main Agent (server.js)
+      |
+      |-- Persona & Rules (Firestore)
+      |-- Short-Term Context (Firestore)
+      |-- Long-Term Semantic Memory (Qdrant)
+      |
+OpenAI LLM
+      |
+Context-Aware Response
 
-Role
+Multi-Agent Separation
 
-Status
+Main Agent (Brain)
+Handles reasoning, memory retrieval, persona enforcement, and LLM orchestration.
 
-server.js
+Worker Agent (whatsapp.js)
+Handles platform-specific message delivery (UltraMsg).
 
-Main Agent / Brain: Handles webhooks, memory retrieval, summarization logic, and the final LLM call.
+This modular design improves fault isolation and extensibility.
 
-Secured
+🔍 Why Qdrant Is Central
 
-whatsapp.js
+Qdrant is used as the primary vector database to:
 
-Sub-Agent Worker: Manages outbound messaging via the external API (e.g., UltraMsg).
+Store embeddings of user preferences and contextual statements
 
-Secured
+Perform similarity search across past interactions
 
-firebase.js
+Retrieve relevant memories even when phrasing differs
 
-Data Layer: Initializes the Firestore database connection by reading configuration securely from process.env.
+Key Properties:
 
-Secured
+Per-user memory isolation (phone-number scoped)
 
-Getting Started (Local Setup)
+Vector similarity search (Cosine distance)
 
-To get a local copy up and running, follow these simple steps.
+Runtime retrieval influencing agent responses
 
-1. Clone the Repository & Install Dependencies
+Without Qdrant, long-term memory would degrade to summaries or heuristics.
 
-# Clone the repository
-git clone git clone https://github.com/Uday4890/AI-Agent-Manager.git
+🧠 Memory Design
+1️⃣ Persona & Rules (Firestore)
+
+Deterministic
+
+Never overridden
+
+Example:
+
+phone_number → instruction_text
+
+2️⃣ Short-Term Context (Firestore)
+
+Last N messages
+
+Maintains conversational continuity
+
+3️⃣ Long-Term Semantic Memory (Qdrant)
+
+Embedded using OpenAI embeddings
+
+Retrieved via similarity search
+
+Injected into the system prompt
+
+This ensures:
+
+Memory supports behavior, but never controls it.
+
+📁 Project Structure
+File	Role
+server.js	Main Agent (logic, memory, LLM)
+whatsapp.js	Messaging Worker (UltraMsg)
+firebase.js	Firestore initialization
+memory/qdrant.js	Qdrant client & collection setup
+🚀 Getting Started (Local Setup)
+Prerequisites
+
+Node.js ≥ 18
+
+Docker Desktop
+
+OpenAI API Key
+
+1️⃣ Start Qdrant
+docker run -p 6333:6333 qdrant/qdrant
+
+
+Verify:
+
+http://localhost:6333
+
+2️⃣ Clone & Install
+git clone https://github.com/Uday4890/AI-Agent-Manager.git
 cd AI-Agent-Manager
-
-# Install Node.js dependencies
 npm install
 
+3️⃣ Environment Variables
 
-2. Configure Environment Variables (Secrets)
+Create .env (do NOT commit):
 
-Create a file named .env in the root of your project directory. Do NOT commit this file. Use the provided .env.example file as a template to fill in your real credentials.
+OPENAI_API_KEY=your_openai_key
 
-3. Run the Server & Expose the Webhook
 
-Your Node.js server listens on port 3000 for incoming WhatsApp messages. Since it must be reachable from the internet, you must use ngrok to create a secure tunnel.
+Firebase credentials are also loaded from environment variables.
 
-Start your Node.js server:
-
+4️⃣ Run the Server
 node server.js
 
 
-In a second terminal window, run ngrok:
+Server runs on:
 
-# This exposes your local port 3000 publicly
+http://localhost:3000
+
+5️⃣ Expose Webhook (WhatsApp)
 ngrok http 3000
 
 
-Configure WhatsApp Webhook: Copy the Forwarding URL (the https://... link) provided by ngrok and paste it into your WhatsApp API provider's webhook settings, appending the endpoint path:
+Set webhook URL in WhatsApp API provider as:
 
-[YOUR NGROK URL]/whatsapp/incoming
+https://<ngrok-url>/whatsapp/incoming
+
+🧪 Local Testing (No WhatsApp Required)
+
+A test endpoint is provided for demos and debugging:
+
+POST /test
 
 
-🚀 Future Roadmap (Version 2.0 - Proactive Agents)
+Example:
 
-The next phase will introduce Function Calling (Tool Use) to transform the agent into an active execution engine:
+curl -X POST http://localhost:3000/test \
+  -H "Content-Type: application/json" \
+  -d '{"message":"I prefer short answers"}'
 
-Calendar Agent: For scheduling and real-time availability checks.
 
-Clock Agent: For setting time-based reminders.
+Returns:
 
-Notepad Agent: A proactive scheduler to aggregate and report on all activity every few hours.
+persona applied
+
+Qdrant retrieval results
+
+This ensures full reproducibility without external services.
+
+⚠️ Limitations
+
+Semantic memory insertion uses a simple heuristic
+
+Qdrant data is ephemeral unless volumes are used
+
+Full WhatsApp demo requires a second device
+
+These do not affect system correctness or evaluation.
+📌 Summary
+
+This project demonstrates a principled, production-aligned use of Qdrant for long-term semantic memory in a conversational AI agent.
+By separating rules, context, and semantic recall, the system remains predictable while adapting over time.
+
+📜 License
+
+MIT
+
+🚧 Future Work
+
+Tool / function calling agents
+
+Proactive scheduling agents
+
+Memory decay & reinforcement scoring
