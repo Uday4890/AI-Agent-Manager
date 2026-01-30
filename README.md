@@ -1,5 +1,5 @@
 🌟 Qdrant-Powered WhatsApp AI Agent
-Persona-Aware Long-Term Memory for Conversational Systems (MAS Track)
+Persona-Aware Long-Term Memory for Conversational Systems
 
 This project implements a production-oriented conversational AI agent that combines deterministic persona control with semantic long-term memory using Qdrant as the primary vector search engine.
 
